@@ -6,9 +6,9 @@ options =
   # Easily enable or disable the widget.
   widgetEnable    :         true
   # Your Strava user ID. It's at the end of your profile page URL.
-  myid            :         "7217285"
+  myid            :         ""
   # Your Strava authorization token. Get one here - www.strava.com/settings/api.
-  token           :         "545a5f91ea156a7a415f8ea985c277a2808f5caf"
+  token           :         ""
   # Distance units: KM for kilometers or M for miles.
   units           :         "KM"
   # Your yearly biking goal in kilometers.
@@ -23,24 +23,29 @@ command: "osascript Strava.widget/Strava.applescript #{options.myid} #{options.t
 style: """
 
   // A few useful variables.
-  white1 = rgba(white,1)
-  white05 = rgba(white,0.5)
-  white02 = rgba(white,0.2)
+
+  fColor1 = rgba(white,1)
+  fColor05 = rgba(white,0.5)
+  fColor02 = rgba(white,0.2)
+  bColor1 = rgba(black,1)
+  bColor05 = rgba(black,0.5)
+  bColor02 = rgba(black,0.2)
 
   if #{options.stickInCorner} == false
     margin = 20px
     box-shadow 0 20px 50px 10px rgba(0,0,0,.6)
   else
     margin = 0
-  transform-style preserve-3d
 
+  transform-style preserve-3d
   bottom margin
   right margin
   width 176px
   overflow hidden
   white-space nowrap
   position relative
-  -webkit-backdrop-filter blur(20px) brightness(70%) contrast(120%) saturate(140%)
+  -webkit-backdrop-filter: blur(30px) brightness(80%) contrast(100%) saturate(140%);
+  background-color bColor02
   font-family system, -apple-system
   opacity 0
   display none
@@ -51,7 +56,7 @@ style: """
   .wrapper
     font-size 8pt
     line-height 11pt
-    color white
+    color fColor1
     padding 8px
     height auto
 
@@ -77,7 +82,7 @@ style: """
   .bar, .progress, .goal
     top 0
     left 0
-    background-color white02
+    background-color fColor02
     height 8px
     width 100%
     max-width 100%
@@ -86,19 +91,19 @@ style: """
     position absolute
 
   .goal
-    background-color white02
+    background-color fColor02
     z-index 2
     width 2%
 
   .progress
-    background-color white
+    background-color fColor1
     z-index 3
     width 1%
 
   .outdone
     background none
-    height 12px
-    border-right 1px solid white05
+    height 10px
+    border-right 1px solid fColor05
 """
 
 options : options
@@ -138,6 +143,7 @@ update: (output, domEl) ->
   div = $(domEl)
 
   if @options.widgetEnable
+
     # Get our pieces.
     values = output.slice(0,-1).split("~")
 

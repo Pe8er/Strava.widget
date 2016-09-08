@@ -3,8 +3,6 @@
 -- Set a few global variables because I'm lazy, please don't touch.
 global scriptStart, scriptEnd, myID, unit
 
---my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000"})
---my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000"})
 
 on run (arguments)
 	-- grab arguments from input

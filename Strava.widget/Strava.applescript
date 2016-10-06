@@ -3,6 +3,8 @@
 -- Set a few global variables because I'm lazy, please don't touch.
 global scriptStart, scriptEnd, myID, unit
 
+--my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000"})
+--my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000"})
 
 on run (arguments)
 	-- grab arguments from input
@@ -22,18 +24,16 @@ on run (arguments)
 	---------------MAIN CALCULATIONS----------------
 	------------------------------------------------
 	
-	
 	try
 		set wDistance to getwDistance()
 		set wProgress to makePercent(wDistance / wDistGoal)
 		set wGoal to makePercent((dNumber * dGoal) / wDistGoal)
 		set yDistance to getyDistance()
 		
+		
 		set yProgress to makePercent(yDistance / yDistGoal)
 		set yGoal to makePercent((wNumber * wDistGoal) / yDistGoal)
 		
-		
-		--return toMiles(yDistance)
 		if unit is "M" then
 			set wDistance to toMiles(wDistance)
 			set yDistance to toMiles(yDistance)
@@ -75,10 +75,13 @@ on getwDistance()
 	repeat with aDay in wDistanceRaw
 		set AppleScript's text item delimiters to ","
 		set aDistance to text item 1 of aDay
-		set wDistance to (aDistance / 1000) + wDistance
+		set wDistance to (formatNumber(aDistance) / 1000) + wDistance
 	end repeat
 	set AppleScript's text item delimiters to ""
-	return round_truncate(wDistance, 2)
+	if wDistance contains "." then
+		set wDistance to round_truncate(wDistance, 1)
+	end if
+	return wDistance
 end getwDistance
 
 on getyDistance()
@@ -91,8 +94,11 @@ on getyDistance()
 		set AppleScript's text item delimiters to ","
 		set yDistance to (text item 1 of totalsRaw)
 		set AppleScript's text item delimiters to ""
-		set yDistance to yDistance as meters as kilometers as string
-		return round_truncate(yDistance, 2)
+		set yDistance to yDistance as meters as kilometers as integer
+		if yDistance contains "." then
+			set yDistance to round_truncate(yDistance, 1)
+		end if
+		return comma_delimit(yDistance)
 	on error e
 		logEvent(e)
 		return 0
@@ -100,7 +106,7 @@ on getyDistance()
 end getyDistance
 
 on makePercent(thisNumber)
-	return round_truncate(thisNumber * 100, 2) & "%" as string
+	return round_truncate(thisNumber * 100, 0) & "%" as string
 end makePercent
 
 on round_truncate(this_number, decimal_places)
@@ -118,9 +124,10 @@ on round_truncate(this_number, decimal_places)
 	set this_number to this_number + rounding_value
 	
 	set the mod_value to "1"
-	repeat decimal_places - 1 times
+	repeat decimal_places times
 		set the mod_value to "0" & the mod_value
 	end repeat
+	
 	set the mod_value to ("." & the mod_value) as number
 	
 	set second_part to (this_number mod 1) div the mod_value
@@ -147,6 +154,22 @@ on round_truncate(this_number, decimal_places)
 	end repeat
 	return reverse of (characters of newNum) as string
 end round_truncate
+
+on comma_delimit(this_number)
+	set this_number to this_number as string
+	if this_number contains "E" then set this_number to number_to_text(this_number)
+	set the num_length to the length of this_number
+	set the this_number to (the reverse of every character of this_number) as string
+	set the new_num to ""
+	repeat with i from 1 to the num_length
+		if i is the num_length or (i mod 3) is not 0 then
+			set the new_num to (character i of this_number & the new_num) as string
+		else
+			set the new_num to ("," & character i of this_number & the new_num) as string
+		end if
+	end repeat
+	return the new_num
+end comma_delimit
 
 on toMiles(n)
 	set n to n as number
@@ -181,6 +204,15 @@ on number_to_string(this_number)
 		return this_number
 	end if
 end number_to_string
+
+on formatNumber(n)
+	if n contains "." then
+		set AppleScript's text item delimiters to "."
+		set y to text item 1 of n
+		set AppleScript's text item delimiters to ""
+		return y as number
+	end if
+end formatNumber
 
 on logEvent(e)
 	tell application "Finder" to set myName to (name of file (path to me))

@@ -1,12 +1,12 @@
 # Strava Progress Tracker for [Übersicht](http://tracesof.net/uebersicht/)
 
-<img src="https://github.com/Pe8er/Strava.widget/blob/master/screenshot.jpg" width="516" height="320">
+<img src="https://github.com/Pe8er/Strava.widget/blob/master/screenshot.jpg?raw=true" width="516" height="320">
 
 ## [Download](https://github.com/Pe8er/Strava.widget/raw/master/Strava.widget.zip)
 
 This widget grabs your weekly and yearly biking stats from [Strava](https://www.strava.com/) and displays them in a somewhat visual manner.
 
-<img src="https://github.com/Pe8er/Strava.widget/blob/master/instructions.jpg" width="420" height="300">
+<img src="https://github.com/Pe8er/Strava.widget/blob/master/instructions.jpg?raw=true" width="420" height="300">
 
 ## How to Use
 

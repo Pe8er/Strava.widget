@@ -6,9 +6,9 @@ options =
   # Easily enable or disable the widget.
   widgetEnable    :         true
   # Your Strava user ID. It's at the end of your profile page URL.
-  myid            :         ""
+  myid            :         "7217285"
   # Your Strava authorization token. Get one here - www.strava.com/settings/api.
-  token           :         ""
+  token           :         "545a5f91ea156a7a415f8ea985c277a2808f5caf"
   # Distance units: KM for kilometers or M for miles.
   units           :         "KM"
   # Your yearly biking goal in kilometers.
@@ -185,4 +185,4 @@ update: (output, domEl) ->
     div.parent('div').css('order', '4')
     div.parent('div').css('flex', '0 1 auto')
   else
-    div.hide()
+    div.remove()

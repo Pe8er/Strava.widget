@@ -32,7 +32,7 @@ options =
   left          :         "0"
 ```
 
-If you don't edit these, the widget will show my statistics. (Which aren't that impressive at all!)
+If you don't add your **user ID** and **authorization token**, the widget will not show up at all.
 
 It supports flex positioning, easy background blur and tons of probably very poorly written code.
 

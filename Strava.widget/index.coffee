@@ -13,12 +13,14 @@ options =
   units           :         "KM"
   # Your yearly biking goal in kilometers.
   yearlygoal      :         "4000"
+  # When do you want to meet your goal? If it's empty, it will set the date to the last day of current year. Use "MM/DD/YY" format.
+  deadline      :         ""
   # Stick the widget in the bottom right corner? Set to *true* if you're using it with Sidebar widget, set to *false* if you'd like to give it some breathing room and a drop shadow.
   stickInCorner   :         true
 
 refreshFrequency:         '1h'
 
-command: "osascript Strava.widget/Strava.applescript #{options.myid} #{options.token} #{options.units} #{options.yearlygoal}"
+command: "osascript Strava.widget/Strava.applescript #{options.myid} #{options.token} #{options.units} #{options.yearlygoal} #{options.deadline}"
 
 style: """
 
@@ -182,7 +184,7 @@ update: (output, domEl) ->
       div.animate {opacity: 0}, 250, 'swing'
 
     # Sort out flex-box positioning.
-    div.parent('div').css('order', '4')
+    div.parent('div').css('order', '2')
     div.parent('div').css('flex', '0 1 auto')
   else
     div.remove()

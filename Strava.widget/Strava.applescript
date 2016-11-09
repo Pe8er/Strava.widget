@@ -2,9 +2,11 @@
 
 -- Set a few global variables because I'm lazy, please don't touch.
 global scriptStart, scriptEnd, myID, unit
+property enableLogging : false -- options: true | false
 
---my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000"})
---my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000"})
+-- I use the below commands to test. Please don't touch.
+-- my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
+--my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
 
 on run (arguments)
 	-- grab arguments from input
@@ -12,33 +14,61 @@ on run (arguments)
 	set token to item 2 of arguments
 	set unit to item 3 of arguments
 	set yDistGoal to item 4 of arguments
+	try
+		set deadline to item 5 of arguments
+	on error
+		set {year:y} to (current date)
+		set deadline to date ("12/31/" & y) as string
+	end try
 	
 	set scriptStart to "curl -G https://www.strava.com/api/v3/athlete"
 	set scriptEnd to " -H 'Authorization: Bearer " & token & "'"
-	set wDistGoal to yDistGoal / 52
 	set wNumber to (do shell script "date '+%V'") as number
-	set dGoal to wDistGoal / 7
 	set dNumber to (do shell script "date '+%u'") as number
 	
-	------------------------------------------------
+	
+	-------------------------------------------------------
 	---------------MAIN CALCULATIONS----------------
-	------------------------------------------------
+	-------------------------------------------------------
 	
 	try
+		-- Distance ridden this week, from Strava
 		set wDistance to getwDistance()
-		set wProgress to makePercent(wDistance / wDistGoal)
-		set wGoal to makePercent((dNumber * dGoal) / wDistGoal)
+		
+		-- Distance ridden this year, from Strava
 		set yDistance to getyDistance()
 		
+		-- How many weeks are remaining until the deadline?
+		set wRemaining to ((date deadline) - (current date)) div days / 7
 		
+		-- Distance I need to ride weekly to meet my yearly goal
+		set wDistGoal to (yDistGoal - yDistance) / wRemaining
+		
+		-- Percentage of weekly progress I have completed
+		set wProgress to makePercent(wDistance / wDistGoal)
+		
+		-- Percentage of weekly progress I should have completed
+		set wGoal to makePercent((dNumber * wDistGoal / 7) / wDistGoal)
+		
+		-- Percentage of yearly progress I have completed
 		set yProgress to makePercent(yDistance / yDistGoal)
-		set yGoal to makePercent((wNumber * wDistGoal) / yDistGoal)
+		
+		-- Percentage of yearly progress I should have completed
+		set yGoal to makePercent((wNumber * (yDistGoal / 52)) / yDistGoal)
 		
 		if unit is "M" then
 			set wDistance to toMiles(wDistance)
 			set yDistance to toMiles(yDistance)
 		end if
 		
+		logEvent("My yearly goal (yDistGoal): " & yDistGoal & space & unit & return & Â
+			"Distance I rode this year so far (yDistance): " & yDistance & space & unit & return & Â
+			"Distance I rode this week so far (wDistance): " & wDistance & space & unit & return & Â
+			"Percentage of weekly progress I have completed (wProgress): " & wProgress & return & Â
+			"Percentage of weekly progress I should have completed (wGoal): " & wGoal & return & Â
+			"Percentage of yearly progress I have completed (yProgress): " & yProgress & return & Â
+			"Percentage of yearly progress I should have completed (yGoal): " & yGoal Â
+			as string)
 		
 		return Â
 			wDistance & space & unit & "~" & Â
@@ -48,6 +78,7 @@ on run (arguments)
 			yProgress & "~" & Â
 			yGoal Â
 				as string
+		
 	on error e
 		logEvent(e)
 		return "NA"
@@ -56,9 +87,8 @@ end run
 
 
 --------------------------------------------------------
----------------SUBROUTINES GALORE--------------
+---------------SUBROUTINES GALORE---------------
 --------------------------------------------------------
-
 
 
 on getwDistance()
@@ -106,7 +136,9 @@ on getyDistance()
 end getyDistance
 
 on makePercent(thisNumber)
-	return round_truncate(thisNumber * 100, 0) & "%" as string
+	set output to round_truncate(thisNumber * 100, 0)
+	if output is less than 0 then set output to 100
+	return output & "%" as string
 end makePercent
 
 on round_truncate(this_number, decimal_places)
@@ -215,6 +247,11 @@ on formatNumber(n)
 end formatNumber
 
 on logEvent(e)
-	tell application "Finder" to set myName to (name of file (path to me))
-	do shell script "echo '" & (current date) & space & quoted form of (e as string) & "' >> ~/Library/Logs/" & myName & ".log"
+	if enableLogging is true then
+		set e to e as string
+		tell application "Finder" to set myName to (name of file (path to me))
+		do shell script "echo '" & "***LOG START***" & return & (current date) & return & e & return & "***LOG END***" & "' >> ~/Library/Logs/" & quoted form of myName & ".log"
+	else
+		return
+	end if
 end logEvent

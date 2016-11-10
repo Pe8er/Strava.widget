@@ -1,15 +1,19 @@
 -- Strava API documentation: http://strava.github.io/api/
 
--- Set a few global variables because I'm lazy, please don't touch.
-global scriptStart, scriptEnd, myID, unit
+
 property enableLogging : false -- options: true | false
 
+
+-- Set a few global variables because I'm lazy, please don't touch.
+global scriptStart, scriptEnd, myID, unit, otherSeparator
+property userDecimalSeparator : item 2 of (1.1 as string)
+
 -- I use the below commands to test. Please don't touch.
--- my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
--- my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
+--my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
+--my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
 
 on run (arguments)
-	-- grab arguments from input
+	-- Grab arguments from input
 	set myID to item 1 of arguments
 	set token to item 2 of arguments
 	set unit to item 3 of arguments
@@ -18,13 +22,19 @@ on run (arguments)
 		set deadline to item 5 of arguments
 	on error
 		set {year:y} to (current date)
-		set deadline to date ("12/31/" & y) as string
+		set deadline to "12/31/" & y
 	end try
+	set deadline to convertDate(deadline)
+	
+	-- Set up other variables
+	set wNumber to (do shell script "date '+%V'") as number
+	set dNumber to (do shell script "date '+%u'") as number
 	
 	set scriptStart to "curl -G https://www.strava.com/api/v3/athlete"
 	set scriptEnd to " -H 'Authorization: Bearer " & token & "'"
-	set wNumber to (do shell script "date '+%V'") as number
-	set dNumber to (do shell script "date '+%u'") as number
+	
+	set otherSeparator to ","
+	if userDecimalSeparator is "," then set otherSeparator to "."
 	
 	
 	-------------------------------------------------------
@@ -39,7 +49,7 @@ on run (arguments)
 		set yDistance to getyDistance()
 		
 		-- How many weeks are remaining until the deadline?
-		set wRemaining to ((date deadline) - (current date)) div days / 7
+		set wRemaining to round (((date deadline) - (current date)) div days / 7)
 		
 		-- Distance I need to ride weekly to meet my yearly goal
 		set wDistGoal to (yDistGoal - yDistance) / wRemaining
@@ -71,10 +81,10 @@ on run (arguments)
 			as string)
 		
 		return Â
-			commaDelimit(roundThis(wDistance, 1)) & space & unit & "~" & Â
+			format(wDistance) & space & unit & "~" & Â
 			wProgress & "~" & Â
 			wGoal & "~" & Â
-			commaDelimit(roundThis(yDistance, 1)) & space & unit & "~" & Â
+			format(yDistance) & space & unit & "~" & Â
 			yProgress & "~" & Â
 			yGoal Â
 				as string
@@ -129,22 +139,36 @@ on getyDistance()
 	end try
 end getyDistance
 
-on roundThis(n, numDecimals)
-	set x to 10 ^ numDecimals
-	number_to_string((((n * x) + 0.5) div 1) / x) as number
-end roundThis
+on convertDate(aDate)
+	set deadline to current date
+	set AppleScript's text item delimiters to "/"
+	set d to text item 2 of aDate
+	set m to text item 1 of aDate
+	set y to text item 3 of aDate
+	set AppleScript's text item delimiters to ""
+	set deadline's year to y
+	set deadline's month to m
+	set deadline's day to d
+	return deadline as string
+end convertDate
 
-on makePercent(thisNumber)
-	set output to roundThis(thisNumber * 100, 1)
-	if output is less than 0 then set output to 100
-	return output & "%" as string
-end makePercent
+on format(aNumber)
+	if aNumber contains "E" then set aNumber to round aNumber
+	set aNumber to my roundNumber(aNumber, 1)
+	return my commaDelimit(aNumber)
+end format
+
+on roundNumber(n, numDecimals)
+	if n contains "E" then set n to round n
+	set x to 10 ^ numDecimals
+	numberToString((((n * x) + 0.5) div 1) / x) as number
+end roundNumber
 
 on commaDelimit(aNumber)
 	set aNumber to aNumber as string
-	if aNumber contains "E" then set aNumber to number_to_string(aNumber)
-	if aNumber contains "." then
-		set AppleScript's text item delimiters to "."
+	if aNumber contains "E" then set aNumber to numberToString(aNumber)
+	if aNumber contains userDecimalSeparator then
+		set AppleScript's text item delimiters to userDecimalSeparator
 		set workingNumber to text item 1 of aNumber
 		set suffixNumber to text item 2 of aNumber
 		set AppleScript's text item delimiters to ""
@@ -160,33 +184,39 @@ on commaDelimit(aNumber)
 		if i is the num_length or (i mod 3) is not 0 then
 			set the newNumber to (character i of workingNumber & the newNumber) as string
 		else
-			set the newNumber to ("," & character i of workingNumber & the newNumber) as string
+			set the newNumber to (otherSeparator & character i of workingNumber & the newNumber) as string
 		end if
 	end repeat
-	if aNumber contains "." then
-		set newNumber to newNumber & "." & suffixNumber
+	if aNumber contains userDecimalSeparator then
+		set newNumber to newNumber & userDecimalSeparator & suffixNumber
 	end if
 	return newNumber
 end commaDelimit
+
+on makePercent(thisNumber)
+	set output to round thisNumber * 100
+	if output is less than 0 then set output to 100
+	return output & "%" as string
+end makePercent
 
 on toMiles(n)
 	set n to n as kilometers as miles as number
 end toMiles
 
-on number_to_string(this_number)
-	set this_number to this_number as string
-	if this_number contains "E+" then
-		set x to the offset of "." in this_number
-		set y to the offset of "+" in this_number
-		set z to the offset of "E" in this_number
-		set the decimal_adjust to characters (y - (length of this_number)) thru Â
-			-1 of this_number as string as number
+on numberToString(aNumber)
+	set aNumber to aNumber as string
+	if aNumber contains "E+" then
+		set x to the offset of userDecimalSeparator in aNumber
+		set y to the offset of "+" in aNumber
+		set z to the offset of "E" in aNumber
+		set the decimal_adjust to characters (y - (length of aNumber)) thru Â
+			-1 of aNumber as string as number
 		if x is not 0 then
-			set the first_part to characters 1 thru (x - 1) of this_number as string
+			set the first_part to characters 1 thru (x - 1) of aNumber as string
 		else
 			set the first_part to ""
 		end if
-		set the second_part to characters (x + 1) thru (z - 1) of this_number as string
+		set the second_part to characters (x + 1) thru (z - 1) of aNumber as string
 		set the converted_number to the first_part
 		repeat with i from 1 to the decimal_adjust
 			try
@@ -198,9 +228,9 @@ on number_to_string(this_number)
 		end repeat
 		return the converted_number
 	else
-		return this_number
+		return aNumber
 	end if
-end number_to_string
+end numberToString
 
 on logEvent(e)
 	if enableLogging is true then

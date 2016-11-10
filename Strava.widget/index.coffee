@@ -14,7 +14,7 @@ options =
   # Your yearly biking goal in kilometers.
   yearlygoal      :         "4000"
   # When do you want to meet your goal? If it's empty, it will set the date to the last day of current year. Use "MM/DD/YY" format.
-  deadline      :         ""
+  deadline      :         "12/12/16"
   # Stick the widget in the bottom right corner? Set to *true* if you're using it with Sidebar widget, set to *false* if you'd like to give it some breathing room and a drop shadow.
   stickInCorner   :         true
 

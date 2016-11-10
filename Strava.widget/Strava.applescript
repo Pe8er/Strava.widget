@@ -5,8 +5,8 @@ global scriptStart, scriptEnd, myID, unit
 property enableLogging : false -- options: true | false
 
 -- I use the below commands to test. Please don't touch.
--- my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
---my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
+--my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
+Ñ my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
 
 on run (arguments)
 	-- grab arguments from input
@@ -57,8 +57,8 @@ on run (arguments)
 		set yGoal to makePercent((wNumber * (yDistGoal / 52)) / yDistGoal)
 		
 		if unit is "M" then
-			set wDistance to toMiles(wDistance)
 			set yDistance to toMiles(yDistance)
+			set wDistance to toMiles(wDistance)
 		end if
 		
 		logEvent("My yearly goal (yDistGoal): " & yDistGoal & space & unit & return & Â
@@ -71,10 +71,10 @@ on run (arguments)
 			as string)
 		
 		return Â
-			wDistance & space & unit & "~" & Â
+			commaDelimit(roundThis(wDistance, 1)) & space & unit & "~" & Â
 			wProgress & "~" & Â
 			wGoal & "~" & Â
-			yDistance & space & unit & "~" & Â
+			commaDelimit(roundThis(yDistance, 1)) & space & unit & "~" & Â
 			yProgress & "~" & Â
 			yGoal Â
 				as string
@@ -83,7 +83,7 @@ on run (arguments)
 		logEvent(e)
 		return "NA"
 	end try
-end run
+end test
 
 
 --------------------------------------------------------
@@ -105,12 +105,9 @@ on getwDistance()
 	repeat with aDay in wDistanceRaw
 		set AppleScript's text item delimiters to ","
 		set aDistance to text item 1 of aDay
-		set wDistance to (formatNumber(aDistance) / 1000) + wDistance
+		set wDistance to (aDistance as meters as kilometers as number) + wDistance
 	end repeat
 	set AppleScript's text item delimiters to ""
-	if wDistance contains "." then
-		set wDistance to round_truncate(wDistance, 1)
-	end if
 	return wDistance
 end getwDistance
 
@@ -124,88 +121,56 @@ on getyDistance()
 		set AppleScript's text item delimiters to ","
 		set yDistance to (text item 1 of totalsRaw)
 		set AppleScript's text item delimiters to ""
-		set yDistance to yDistance as meters as kilometers as integer
-		if yDistance contains "." then
-			set yDistance to round_truncate(yDistance, 1)
-		end if
-		return comma_delimit(yDistance)
+		set yDistance to yDistance as meters as kilometers as number
+		return yDistance
 	on error e
 		logEvent(e)
 		return 0
 	end try
 end getyDistance
 
+on roundThis(n, numDecimals)
+	set x to 10 ^ numDecimals
+	number_to_string((((n * x) + 0.5) div 1) / x) as number
+end roundThis
+
 on makePercent(thisNumber)
-	set output to round_truncate(thisNumber * 100, 0)
+	set output to roundThis(thisNumber * 100, 1)
 	if output is less than 0 then set output to 100
 	return output & "%" as string
 end makePercent
 
-on round_truncate(this_number, decimal_places)
-	if decimal_places is 0 then
-		set this_number to this_number + 0.5
-		return number_to_string(this_number div 1)
+on commaDelimit(aNumber)
+	set aNumber to aNumber as string
+	if aNumber contains "E" then set aNumber to number_to_string(aNumber)
+	if aNumber contains "." then
+		set AppleScript's text item delimiters to "."
+		set workingNumber to text item 1 of aNumber
+		set suffixNumber to text item 2 of aNumber
+		set AppleScript's text item delimiters to ""
+	else
+		set workingNumber to aNumber
+		set suffixNumber to ""
 	end if
 	
-	set the rounding_value to "5"
-	repeat decimal_places times
-		set the rounding_value to "0" & the rounding_value
-	end repeat
-	set the rounding_value to ("." & the rounding_value) as number
-	
-	set this_number to this_number + rounding_value
-	
-	set the mod_value to "1"
-	repeat decimal_places times
-		set the mod_value to "0" & the mod_value
-	end repeat
-	
-	set the mod_value to ("." & the mod_value) as number
-	
-	set second_part to (this_number mod 1) div the mod_value
-	if the length of (the second_part as text) is less than the decimal_places then
-		repeat decimal_places - (the length of (the second_part as text)) times
-			set second_part to ("0" & second_part) as string
-		end repeat
-	end if
-	
-	set first_part to this_number div 1
-	set first_part to number_to_string(first_part)
-	set this_number to (first_part & "." & second_part)
-	
-	set theChars to reverse of (characters of (this_number as string))
-	set newNum to ""
-	set charCount to count of theChars
-	repeat with i from 1 to charCount
-		set y to item i of theChars
-		set newNum to newNum & y
-		if i ­ charCount Â
-			and i mod 3 = 0 Â
-			and y is not "." then Â
-			set newNum to newNum & ","
-	end repeat
-	return reverse of (characters of newNum) as string
-end round_truncate
-
-on comma_delimit(this_number)
-	set this_number to this_number as string
-	if this_number contains "E" then set this_number to number_to_text(this_number)
-	set the num_length to the length of this_number
-	set the this_number to (the reverse of every character of this_number) as string
-	set the new_num to ""
+	set the num_length to the length of workingNumber
+	set the workingNumber to (the reverse of every character of workingNumber) as string
+	set the newNumber to ""
 	repeat with i from 1 to the num_length
 		if i is the num_length or (i mod 3) is not 0 then
-			set the new_num to (character i of this_number & the new_num) as string
+			set the newNumber to (character i of workingNumber & the newNumber) as string
 		else
-			set the new_num to ("," & character i of this_number & the new_num) as string
+			set the newNumber to ("," & character i of workingNumber & the newNumber) as string
 		end if
 	end repeat
-	return the new_num
-end comma_delimit
+	if aNumber contains "." then
+		set newNumber to newNumber & "." & suffixNumber
+	end if
+	return newNumber
+end commaDelimit
 
 on toMiles(n)
-	set n to n as number
-	return round_truncate(n as kilometers as miles as number, 2)
+	set n to n as kilometers as miles as number
 end toMiles
 
 on number_to_string(this_number)
@@ -236,15 +201,6 @@ on number_to_string(this_number)
 		return this_number
 	end if
 end number_to_string
-
-on formatNumber(n)
-	if n contains "." then
-		set AppleScript's text item delimiters to "."
-		set y to text item 1 of n
-		set AppleScript's text item delimiters to ""
-		return y as number
-	end if
-end formatNumber
 
 on logEvent(e)
 	if enableLogging is true then

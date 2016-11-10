@@ -5,8 +5,8 @@ global scriptStart, scriptEnd, myID, unit
 property enableLogging : false -- options: true | false
 
 -- I use the below commands to test. Please don't touch.
---my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
-Ñ my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
+-- my test({"7217285", "545a5f91ea156a7a415f8ea985c277a2808f5caf", "KM", "4000", "12/12/16"})
+-- my test({"38964", "5533ca8895cf012f007f319c073de983f39f7f13", "KM", "4000", "12/31/16"})
 
 on run (arguments)
 	-- grab arguments from input
@@ -83,7 +83,7 @@ on run (arguments)
 		logEvent(e)
 		return "NA"
 	end try
-end test
+end run
 
 
 --------------------------------------------------------
